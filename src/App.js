@@ -25,7 +25,7 @@ function CompletedListItem(props) {
   return (
     <li className='list-item' id={props.id}>
       <p>{props.value}</p>
-      <button>Not Done</button>
+      <button onClick={() => props.onClickNotComplete(props.id)}>Not Done</button>
     </li>
   );
 }
@@ -38,7 +38,7 @@ class ListItem extends Component {
     let listItem;
     
     if(complete) {
-      listItem = <CompletedListItem value={this.props.value} id={this.props.id} />;
+      listItem = <CompletedListItem value={this.props.value} id={this.props.id} onClickNotComplete={id => this.props.onClickNotComplete(id)} />;
     } else if(edit) {
       listItem = <EditableListItem value={this.props.value} id={this.props.id} onClickSave={id => this.props.onClickSave(id)} onEditText={(id, value) => this.props.onEditText(id, value)} />;
     } else {
@@ -66,6 +66,7 @@ class List extends Component {
         onClickSave={id => this.props.onClickSave(id)}
         onEditText={(id, value) => this.props.onEditText(id, value)}
         onClickComplete={id => this.props.onClickComplete(id)}
+        onClickNotComplete={id => this.props.onClickNotComplete(id)}
       />
     );
 
@@ -171,7 +172,26 @@ class ToDoApp extends Component {
     item.complete = true;
 
     itemsComplete.push(item);
-    itemsToDo.pop(item);
+    itemsToDo.splice(itemNumber, 1);
+
+    this.setState({
+      itemsToDo: itemsToDo,
+      itemsComplete: itemsComplete
+    });
+  }
+
+  handleUnCompleteListItem(itemId) {
+    let itemsComplete = this.state.itemsComplete.slice();
+    let itemNumber = searchForItem(itemsComplete, itemId);
+    let item = itemsComplete[itemNumber];
+
+    let itemsToDo = this.state.itemsToDo.slice();
+
+    
+    item.complete = false;
+    
+    itemsToDo.push(item);
+    itemsComplete.splice(itemNumber, 1);
 
     this.setState({
       itemsToDo: itemsToDo,
@@ -199,6 +219,7 @@ class ToDoApp extends Component {
         <List 
           items={this.state.itemsComplete}
           header="Completed"
+          onClickNotComplete={id => this.handleUnCompleteListItem(id)}
         />
       </div>
     );
