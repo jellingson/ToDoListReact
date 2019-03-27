@@ -2,14 +2,38 @@ import React, { Component } from 'react';
 // import logo from './logo.svg';
 import './App.css';
 
+function EditableListItem(props) {
+  return (
+    <li className='list-item'>
+      <input defaultValue={props.value} onChange={e => props.onEditText(props.id, e.target.value)}/>
+      <button onClick={() => props.onClickSave(props.id)}>Save</button>
+    </li>
+  );
+}
+
+function UneditableListItem(props) {
+  return (
+    <li className='list-item' id={props.id}>
+      <p>{props.value}</p>
+      <button>Complete</button>
+      <button onClick={() => props.onClickEdit(props.id)}>Edit</button>
+    </li>
+  );
+}
+
 class ListItem extends Component {
   render() {
+    let edit = this.props.edit;
+    let listItem = <UneditableListItem value={this.props.value} id={this.props.id} onClickEdit={id => this.props.onClickEdit(id)} />;
+
+    if(edit) {
+      listItem = <EditableListItem value={this.props.value} id={this.props.id} onClickSave={id => this.props.onClickSave(id)} onEditText={(id, value) => this.props.onEditText(id, value)} />;
+    }
+
     return (
-      <li className='list-item'>
-        <p>{this.props.value}</p>
-        <button>Complete</button>
-        <button>Edit</button>
-      </li>
+      <div>
+        {listItem}
+      </div>
     );
   }
 }
@@ -20,6 +44,11 @@ class List extends Component {
       <ListItem 
         value={item.value}
         key={item.id}
+        id={item.id}
+        edit={item.edit}
+        onClickEdit={id => this.props.onClickEdit(id)}
+        onClickSave={id => this.props.onClickSave(id)}
+        onEditText={(id, value) => this.props.onEditText(id, value)}
       />
     );
 
@@ -62,7 +91,8 @@ class ToDoApp extends Component {
     let numberOfItems = this.state.numberOfItems+1;
     items.push({
       id: 'list-item-'+numberOfItems,
-      value: this.state.valueToAdd
+      value: this.state.valueToAdd,
+      edit: false
     })
     this.setState({
       itemsToDo: items,
@@ -71,14 +101,43 @@ class ToDoApp extends Component {
     });
   }
 
-  handleChangeItemText(value) {
+  handleAddItemText(value) {
     this.setState({
       valueToAdd: value
-    })
+    });
   }
 
-  editListItem() {
+  handleEditItemText(itemId, value) {
+    let items = this.state.itemsToDo.slice();
+    let itemNumber = searchForItem(items, itemId);
 
+    items[itemNumber].value = value;
+
+    this.setState({
+      itemsToDo: items
+    });
+  }
+
+  handleSaveListItem(itemId) {
+    let items = this.state.itemsToDo.slice();
+    let itemNumber = searchForItem(items, itemId);
+
+    items[itemNumber].edit = false;
+
+    this.setState({
+      itemsToDo: items
+    });
+  }
+
+  handleEditListItem(itemId) {
+    let items = this.state.itemsToDo.slice();
+    let itemNumber = searchForItem(items, itemId);
+
+    items[itemNumber].edit = true;
+
+    this.setState({
+      itemsToDo: items
+    });
   }
 
   render() {
@@ -87,12 +146,15 @@ class ToDoApp extends Component {
         <h1>To Do App</h1>
         <AddItem 
           onClick={() => this.handleClickAddItem()}
-          onChange={value => this.handleChangeItemText(value)}
+          onChange={value => this.handleAddItemText(value)}
           value={this.state.valueToAdd}
         />
         <List 
           items={this.state.itemsToDo}
           header="To Do"
+          onClickEdit={id => this.handleEditListItem(id)}
+          onClickSave={id => this.handleSaveListItem(id)}
+          onEditText={(id, value) => this.handleEditItemText(id, value)}
         />
       </div>
     );
@@ -100,3 +162,13 @@ class ToDoApp extends Component {
 }
 
 export default ToDoApp;
+
+function searchForItem(itemList, itemId) {
+  let item;
+  for(let i = 0; i < itemList.length; i++) {
+    item = itemList[i];
+    if(item.id === itemId) {
+      return i;
+    }
+  }
+}
