@@ -15,8 +15,17 @@ function UneditableListItem(props) {
   return (
     <li className='list-item' id={props.id}>
       <p>{props.value}</p>
-      <button>Complete</button>
+      <button onClick={() => props.onClickComplete(props.id)}>Complete</button>
       <button onClick={() => props.onClickEdit(props.id)}>Edit</button>
+    </li>
+  );
+}
+
+function CompletedListItem(props) {
+  return (
+    <li className='list-item' id={props.id}>
+      <p>{props.value}</p>
+      <button>Not Done</button>
     </li>
   );
 }
@@ -24,10 +33,16 @@ function UneditableListItem(props) {
 class ListItem extends Component {
   render() {
     let edit = this.props.edit;
-    let listItem = <UneditableListItem value={this.props.value} id={this.props.id} onClickEdit={id => this.props.onClickEdit(id)} />;
+    let complete = this.props.complete;
 
-    if(edit) {
+    let listItem;
+    
+    if(complete) {
+      listItem = <CompletedListItem value={this.props.value} id={this.props.id} />;
+    } else if(edit) {
       listItem = <EditableListItem value={this.props.value} id={this.props.id} onClickSave={id => this.props.onClickSave(id)} onEditText={(id, value) => this.props.onEditText(id, value)} />;
+    } else {
+      listItem = <UneditableListItem value={this.props.value} id={this.props.id} onClickEdit={id => this.props.onClickEdit(id)} onClickComplete={id => this.props.onClickComplete(id)} />;
     }
 
     return (
@@ -46,9 +61,11 @@ class List extends Component {
         key={item.id}
         id={item.id}
         edit={item.edit}
+        complete={item.complete}
         onClickEdit={id => this.props.onClickEdit(id)}
         onClickSave={id => this.props.onClickSave(id)}
         onEditText={(id, value) => this.props.onEditText(id, value)}
+        onClickComplete={id => this.props.onClickComplete(id)}
       />
     );
 
@@ -81,6 +98,9 @@ class ToDoApp extends Component {
       itemsToDo: [
         
       ],
+      itemsComplete: [
+
+      ],
       numberOfItems: 0,
       valueToAdd: ""
     };
@@ -92,7 +112,8 @@ class ToDoApp extends Component {
     items.push({
       id: 'list-item-'+numberOfItems,
       value: this.state.valueToAdd,
-      edit: false
+      edit: false,
+      complete: false
     })
     this.setState({
       itemsToDo: items,
@@ -140,6 +161,24 @@ class ToDoApp extends Component {
     });
   }
 
+  handleCompleteListItem(itemId) {
+    let itemsToDo = this.state.itemsToDo.slice();
+    let itemNumber = searchForItem(itemsToDo, itemId);
+    let item = itemsToDo[itemNumber];
+
+    let itemsComplete = this.state.itemsComplete.slice();
+
+    item.complete = true;
+
+    itemsComplete.push(item);
+    itemsToDo.pop(item);
+
+    this.setState({
+      itemsToDo: itemsToDo,
+      itemsComplete: itemsComplete
+    });
+  }
+
   render() {
     return (
       <div className='ToDoApp'>
@@ -155,6 +194,11 @@ class ToDoApp extends Component {
           onClickEdit={id => this.handleEditListItem(id)}
           onClickSave={id => this.handleSaveListItem(id)}
           onEditText={(id, value) => this.handleEditItemText(id, value)}
+          onClickComplete={id => this.handleCompleteListItem(id)}
+        />
+        <List 
+          items={this.state.itemsComplete}
+          header="Completed"
         />
       </div>
     );
