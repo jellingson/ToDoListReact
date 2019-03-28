@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-// import logo from './logo.svg';
-import './App.css';
+import { Helmet } from 'react-helmet'
+import './App.css'
 
 function EditableListItem(props) {
   return (
@@ -37,9 +37,9 @@ class ListItem extends Component {
 
     let listItem;
     
-    if(complete) {
+    if (complete) {
       listItem = <CompletedListItem value={this.props.value} id={this.props.id} onClickNotComplete={id => this.props.onClickNotComplete(id)} />;
-    } else if(edit) {
+    } else if (edit) {
       listItem = <EditableListItem value={this.props.value} id={this.props.id} onClickSave={id => this.props.onClickSave(id)} onEditText={(id, value) => this.props.onEditText(id, value)} />;
     } else {
       listItem = <UneditableListItem value={this.props.value} id={this.props.id} onClickEdit={id => this.props.onClickEdit(id)} onClickComplete={id => this.props.onClickComplete(id)} />;
@@ -70,10 +70,21 @@ class List extends Component {
       />
     );
 
+    let arrow, display = {};
+
+    if(this.props.arrow) {
+      if (this.props.hide) {
+        display = {display: 'none'};
+        arrow = <i className='material-icons' style={{cursor: 'pointer'}} onClick={() => this.props.onClickArrow()}>arrow_drop_down</i>;
+      } else {
+        arrow = <i className='material-icons' style={{cursor: 'pointer'}} onClick={() => this.props.onClickArrow()}>arrow_drop_up</i>
+      }
+    }
+
     return (
       <div className='List'>
-        <h2>{this.props.header}</h2>
-        <ul className='list-container'>
+        <h2>{this.props.header}{arrow}</h2>
+        <ul className='list-container' style={display}>
           {items}
         </ul>
       </div>
@@ -103,7 +114,8 @@ class ToDoApp extends Component {
 
       ],
       numberOfItems: 0,
-      valueToAdd: ""
+      valueToAdd: "",
+      hideCompleted: true
     };
   }
 
@@ -199,9 +211,20 @@ class ToDoApp extends Component {
     });
   }
 
+  handleToggleCompleteList() {
+    this.setState({
+      hideCompleted: !this.state.hideCompleted
+    });
+  }
+
   render() {
     return (
       <div className='ToDoApp'>
+        <Helmet>
+          <title>To Do App</title>
+          <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" />
+        </Helmet>
         <h1>To Do App</h1>
         <AddItem 
           onClick={() => this.handleClickAddItem()}
@@ -218,8 +241,11 @@ class ToDoApp extends Component {
         />
         <List 
           items={this.state.itemsComplete}
-          header="Completed"
+          header='Completed'
           onClickNotComplete={id => this.handleUnCompleteListItem(id)}
+          onClickArrow={() => this.handleToggleCompleteList()}
+          hide={this.state.hideCompleted}
+          arrow={true}
         />
       </div>
     );
@@ -230,9 +256,9 @@ export default ToDoApp;
 
 function searchForItem(itemList, itemId) {
   let item;
-  for(let i = 0; i < itemList.length; i++) {
+  for (let i = 0; i < itemList.length; i++) {
     item = itemList[i];
-    if(item.id === itemId) {
+    if (item.id === itemId) {
       return i;
     }
   }
